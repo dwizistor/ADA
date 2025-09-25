@@ -1,25 +1,69 @@
 import heapq
 
+def heuristic(a, b):
+    """
+    Calculates the Chebyshev distance between two points.
+    This is an admissible heuristic for an 8-connected grid.
+    """
+    return max(abs(a[0] - b[0]), abs(a[1] - b[1]))
 
-def manhattan_distance(p1, p2):
-    return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
+def a_star(environment):
+    """
+    Performs A* search to find the cheapest path.
 
+    Args:
+        environment (Environment): The environment to search in.
 
-def a_star(environment, start, goal):
-    priority_queue = [(0, start, [start])]
-    visited = {start}
+    Returns:
+        tuple: A tuple containing:
+            - list: The path from start to goal as a list of coordinates.
+            - int: The number of nodes expanded.
+            - float: The cost of the path.
+    """
+    start_pos = environment.start_pos
+    goal_pos = environment.goal_pos
 
-    while priority_queue:
-        cost, current, path = heapq.heappop(priority_queue)
+    frontier = [(0, start_pos)]  # (f_cost, position)
+    parent = {start_pos: None}
+    g_cost = {start_pos: 0}
+    
+    nodes_expanded = 0
 
-        if current == goal:
-            return path
+    while frontier:
+        _, current_pos = heapq.heappop(frontier)
+        nodes_expanded += 1
 
-        for neighbor in environment.get_neighbors(current):
-            if neighbor not in visited:
-                visited.add(neighbor)
-                new_cost = cost + environment.get_cost(neighbor)
-                priority = new_cost + manhattan_distance(neighbor, goal)
-                heapq.heappush(priority_queue, (priority, neighbor, path + [neighbor]))
+        if current_pos == goal_pos:
+            # Reconstruct path
+            path = []
+            curr = goal_pos
+            while curr is not None:
+                path.append(curr)
+                curr = parent.get(curr)
+            path.reverse()
+            
+            return path, nodes_expanded, g_cost[goal_pos]
 
-    return None
+        # 8-connected movement
+        for dy in [-1, 0, 1]:
+            for dx in [-1, 0, 1]:
+                if dy == 0 and dx == 0:
+                    continue
+
+                neighbor_pos = (current_pos[0] + dy, current_pos[1] + dx)
+
+                if (environment.is_valid_position(neighbor_pos) and
+                        not environment.is_obstacle(neighbor_pos)):
+                    
+                    move_cost = environment.get_cost(neighbor_pos)
+                    new_g_cost = g_cost[current_pos] + move_cost
+
+                    if neighbor_pos not in g_cost or new_g_cost < g_cost[neighbor_pos]:
+                        g_cost[neighbor_pos] = new_g_cost
+                        h_cost = heuristic(neighbor_pos, goal_pos)
+                        f_cost = new_g_cost + h_cost
+                        heapq.heappush(frontier, (f_cost, neighbor_pos))
+                        parent[neighbor_pos] = current_pos
+    
+    # Goal not found
+    return None, nodes_expanded, 0

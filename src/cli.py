@@ -1,102 +1,153 @@
 import argparse
+from environment import Environment
+from agent import Agent
+
 import time
 
-from src.agent import Agent
-from src.algorithms.a_star import a_star
-from src.algorithms.bfs import bfs
-from src.algorithms.local_search import hill_climbing
-from src.algorithms.ucs import ucs
-from src.environment import Environment
+def main():
+    """
+    Main function to run the autonomous delivery agent simulation.
+    """
+    parser = argparse.ArgumentParser(description="Autonomous Delivery Agent")
+    parser.add_argument("map_file", help="Path to the map file.")
+    parser.add_argument("--algorithm", choices=['bfs', 'ucs', 'a_star', 'local_search'], 
+                        default='a_star', help="Search algorithm to use.")
+    parser.add_argument("--dynamic", action='store_true', help="Demonstrate dynamic replanning.")
+    parser.add_argument("--compare", action='store_true', help="Compare all algorithms on a map.")
+    
+import argparse
+from environment import Environment
+from agent import Agent
 
-
-def print_grid(grid, width, height, path, start, goal):
-    for y in range(height):
-        row = ""
-        for x in range(width):
-            if (x, y) == start:
-                row += "S "
-            elif (x, y) == goal:
-                row += "G "
-            elif (x, y) in path:
-                row += "* "
-            elif grid[y][x] == -1:
-                row += "# "
-            else:
-                row += ". "
-        print(row)
-
-
-def load_map(map_file):
-    with open(map_file, "r") as f:
-        lines = f.readlines()
-        width, height = map(int, lines[0].split())
-        grid = []
-        for i in range(1, height + 1):
-            grid.append(list(map(int, lines[i].split())))
-
-        moving_obstacles = []
-        if len(lines) > height + 1:
-            num_moving_obstacles = int(lines[height + 1])
-            line_index = height + 2
-            for _ in range(num_moving_obstacles):
-                path_length = int(lines[line_index])
-                line_index += 1
-                path = []
-                for _ in range(path_length):
-                    x, y = map(int, lines[line_index].split())
-                    path.append((x, y))
-                    line_index += 1
-                moving_obstacles.append(path)
-
-    return grid, width, height, moving_obstacles
-
+import time
 
 def main():
+    """
+    Main function to run the autonomous delivery agent simulation.
+    """
     parser = argparse.ArgumentParser(description="Autonomous Delivery Agent")
-    parser.add_argument("--map", type=str, required=True, help="Path to the map file")
-    parser.add_argument(
-        "--algorithm",
-        type=str,
-        required=True,
-        choices=["bfs", "ucs", "a_star", "local_search"],
-        help="Search algorithm to use",
-    )
+    parser.add_argument("map_file", help="Path to the map file.")
+    parser.add_argument("--algorithm", choices=['bfs', 'ucs', 'a_star', 'local_search'], 
+                        default='a_star', help="Search algorithm to use.")
+    parser.add_argument("--dynamic", action='store_true', help="Demonstrate dynamic replanning.")
+    parser.add_argument("--compare", action='store_true', help="Compare all algorithms on a map.")
+    
     args = parser.parse_args()
 
-    # Load the map
-    grid, width, height, moving_obstacles = load_map(args.map)
+    if args.compare:
+        print(f"Comparing algorithms on map: {args.map_file}")
+        algorithms_to_compare = ['bfs', 'a_star', 'local_search']
+        results = []
 
-    # Create the environment
-    environment = Environment(grid, width, height)
-    for obstacle_path in moving_obstacles:
-        environment.add_moving_obstacle(obstacle_path)
+        for algo_name in algorithms_to_compare:
+            print(f"\n--- Running {algo_name.upper()} ---")
+            try:
+                env = Environment(args.map_file)
+                agent = Agent(env)
+                agent.set_algorithm(algo_name)
+                
+                print(f"Start position: {env.start_pos}")
+                print(f"Goal position: {env.goal_pos}")
+                
+                start_time = time.perf_counter()
+                path, nodes_expanded, cost = agent.find_path()
+                end_time = time.perf_counter()
+                
+                time_taken = (end_time - start_time) * 1000 # in ms
 
-    # Create the agent
-    start = (0, 0)
-    goal = (width - 1, height - 1)
-    agent = Agent(environment, start, goal)
+                if path:
+                    results.append({
+                        "Algorithm": algo_name.upper(),
+                        "Path Found": "Yes",
+                        "Cost": f"{cost:.2f}",
+                        "Nodes Expanded": nodes_expanded,
+                        "Time (ms)": f"{time_taken:.4f}"
+                    })
+                else:
+                    results.append({
+                        "Algorithm": algo_name.upper(),
+                        "Path Found": "No",
+                        "Cost": "-",
+                        "Nodes Expanded": nodes_expanded,
+                        "Time (ms)": f"{time_taken:.4f}"
+                    })
 
-    # Find the path
-    start_time = time.time()
-    if args.algorithm == "bfs":
-        path = agent.find_path(bfs)
-    elif args.algorithm == "ucs":
-        path = agent.find_path(ucs)
-    elif args.algorithm == "a_star":
-        path = agent.find_path(a_star)
-    elif args.algorithm == "local_search":
-        path = agent.find_path(hill_climbing)
-    end_time = time.time()
+            except Exception as e:
+                print(f"An error occurred while running {algo_name.upper()}: {e}")
 
-    # Print the results
-    if path:
-        print(f"Path found: {path}")
-        print(f"Path cost: {agent.get_path_cost()}")
-        print(f"Nodes expanded: {len(path)}")
-        print(f"Time taken: {end_time - start_time:.4f} seconds")
-        print_grid(grid, width, height, path, start, goal)
+        # Print summary table
+        print("\n--- Comparison Results ---")
+        if results:
+            headers = results[0].keys()
+            # Determine column widths
+            widths = {h: max(len(str(h)), max(len(str(r[h])) for r in results)) for h in headers}
+            # Print header
+            header_line = " | ".join(h.ljust(widths[h]) for h in headers)
+            print(header_line)
+            print("-" * len(header_line))
+            # Print rows
+            for r in results:
+                row_line = " | ".join(str(r[h]).ljust(widths[h]) for h in headers)
+                print(row_line)
+
     else:
-        print("No path found.")
+        # The existing logic for running a single algorithm or dynamic demo
+        print(f"Loading map from: {args.map_file}")
+        try:
+            env = Environment(args.map_file)
+        except FileNotFoundError:
+            print(f"Error: Map file not found at '{args.map_file}'")
+            return
+
+        print(f"Start position: {env.start_pos}")
+        print(f"Goal position: {env.goal_pos}")
+
+        agent = Agent(env)
+        try:
+            agent.set_algorithm(args.algorithm)
+        except ValueError as e:
+            print(e)
+            return
+
+        print(f"Running with {args.algorithm.upper()} algorithm...")
+        path, nodes_expanded, cost = agent.find_path()
+
+        if not path:
+            print("\nNo initial path found.")
+            env.render() # Render visited nodes even if no path
+            return
+
+        print("\nInitial path found!")
+        print(f"  - Nodes Expanded: {nodes_expanded}")
+        print(f"  - Path Cost ({args.algorithm.upper()}): {cost}")
+        print("\nInitial Grid with Path:")
+        env.render(path=path)
+
+        if args.dynamic:
+            print("\n--- Dynamic Obstacle Simulation ---")
+            obstacle_pos = path[len(path) // 2]
+            obstacle_pos = (int(obstacle_pos[0]), int(obstacle_pos[1]))
+            print(f"\nA dynamic obstacle appears at {obstacle_pos}!")
+            env.add_obstacle(obstacle_pos)
+            print("\nGrid with new obstacle:")
+            env.render(path=path)
+            new_start_pos_index = path.index(obstacle_pos) - 1
+            if new_start_pos_index < 0:
+                print("Obstacle is at the start, no movement possible.")
+                return
+            env.start_pos = path[new_start_pos_index]
+            print(f"\nAgent is at {env.start_pos}, replanning...")
+            new_path, new_nodes_expanded, new_cost = agent.find_path()
+            if not new_path:
+                print("\nCould not find a new path.")
+                env.render()
+                return
+            print("\nNew path found!")
+            print(f"  - Nodes Expanded: {new_nodes_expanded}")
+            print(f"  - Path Cost ({args.algorithm.upper()}): {new_cost}")
+            final_path = path[:new_start_pos_index+1] + new_path
+            print("\nFinal Grid with New Path:")
+            env.render(path=final_path)
 
 
 if __name__ == "__main__":
