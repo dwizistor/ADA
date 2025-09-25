@@ -71,13 +71,13 @@ We compared the performance of Breadth-First Search (BFS), A* Search, and Local 
 
 | Algorithm    | Path Found | Cost | Nodes Expanded | Time (ms) |
 | :----------- | :--------- | :--- | :------------- | :-------- |
-| BFS          | Yes        | 7.00 | 18             | 0.2716    |
-| A_STAR       | Yes        | 5.00 | 9              | 0.2079    |
-| LOCAL_SEARCH | Yes        | 5.00 | 292            | 6.1425    |
+| BFS          | Yes        | 6.00 | 58             | 1.0093    |
+| A_STAR       | Yes        | 5.00 | 9              | 0.2959    |
+| LOCAL_SEARCH | Yes        | 5.00 | 298            | 7.4840    |
 
 **Analysis:**
 On the small map, all algorithms successfully found a path.
-- **BFS** found a path with 7.00 cost, expanding 18 nodes. As an uninformed search, it prioritizes the shortest path in terms of steps, which in this case led through a costly terrain cell.
+- **BFS** found a path with 6.00 cost, expanding 58 nodes. As an uninformed search, it prioritizes the shortest path in terms of steps, which in this case led through a costly terrain cell.
 - **A* Search** found an optimal path with a lower cost of 5.00, expanding only 9 nodes. This highlights the effectiveness of A*'s admissible heuristic in guiding the search towards the goal, leading to fewer explored states.
 - **Local Search (Hill-Climbing)** also found a path with a cost of 5.00. It is important to note that local search algorithms do not guarantee optimality and may get stuck in local minima. The 'Nodes Expanded' metric for local search represents the total nodes expanded by the internal A* calls during path generation and neighbor exploration.
 
@@ -85,34 +85,34 @@ On the small map, all algorithms successfully found a path.
 
 | Algorithm    | Path Found | Cost | Nodes Expanded | Time (ms) |
 | :----------- | :--------- | :--- | :------------- | :-------- |
-| BFS          | Yes        | 7.00 | 18             | 0.4768    |
-| A_STAR       | Yes        | 5.00 | 9              | 0.3980    |
-| LOCAL_SEARCH | Yes        | 6.00 | 295            | 11.4576   |
+| BFS          | Yes        | 6.00 | 58             | 0.8478    |
+| A_STAR       | Yes        | 5.00 | 9              | 0.2294    |
+| LOCAL_SEARCH | Yes        | 5.00 | 301            | 6.6995    |
 
 **Analysis:**
 The results on the medium map are consistent with the small map.
-- **BFS** found a path with 7.00 cost, prioritizing fewer steps.
+- **BFS** found a path with 6.00 cost, prioritizing fewer steps.
 - **A* Search** again found the optimal path with the fewest nodes expanded (9), showcasing its superior efficiency due to heuristic guidance.
-- **Local Search (Hill-Climbing)** found a path with a cost of 6.00. Its performance is highly dependent on the initial random path and the neighbor generation strategy. The 'Nodes Expanded' metric for local search represents the total nodes expanded by the internal A* calls during path generation and neighbor exploration.
+- **Local Search (Hill-Climbing)** found a path with a cost of 5.00. Its performance is highly dependent on the initial random path and the neighbor generation strategy. The 'Nodes Expanded' metric for local search represents the total nodes expanded by the internal A* calls during path generation and neighbor exploration.
 
 ### Large Map (`maps/large.txt`)
 
 | Algorithm    | Path Found | Cost  | Nodes Expanded | Time (ms) |
 | :----------- | :--------- | :---- | :------------- | :-------- |
-| BFS          | Yes        | 36.00 | 152            | 3.3361    |
-| A_STAR       | Yes        | 36.00 | 87             | 2.8277    |
-| LOCAL_SEARCH | Yes        | 36.00 | 2235           | 31.7217   |
+| BFS          | Yes        | 32.00 | 2185           | 25.2394   |
+| A_STAR       | Yes        | 32.00 | 271            | 4.5824    |
+| LOCAL_SEARCH | Yes        | 32.00 | 6744           | 116.7434  |
 
 **Analysis:**
-On the complex large map, all implemented algorithms were able to find a path. BFS and A* found the optimal path with a cost of 36.00. A* was more efficient, expanding fewer nodes. Local Search found a path with a cost of 36.00, which is optimal in this case. The 'Nodes Expanded' metric for local search represents the total nodes expanded by the internal A* calls during path generation and neighbor exploration.
+On the complex large map, all implemented algorithms were able to find a path. BFS and A* found the optimal path with a cost of 32.00. A* was more efficient, expanding fewer nodes. Local Search found a path with a cost of 32.00, which is optimal in this case. The 'Nodes Expanded' metric for local search represents the total nodes expanded by the internal A* calls during path generation and neighbor exploration.
 
 ### Dynamic Map (`maps/dynamic.txt`)
 
 | Algorithm    | Path Found | Cost  | Nodes Expanded | Time (ms) |
 | :----------- | :--------- | :---- | :------------- | :-------- |
-| BFS          | Yes        | 11.00 | 48             | 0.4831    |
-| A_STAR       | Yes        | 11.00 | 36             | 0.6531    |
-| LOCAL_SEARCH | Yes        | 11.00 | 175            | 7.6056    |
+| BFS          | Yes        | 11.00 | 296            | 4.7485    |
+| A_STAR       | Yes        | 11.00 | 34             | 1.0788    |
+| LOCAL_SEARCH | Yes        | 11.00 | 888            | 26.1861   |
 
 **Analysis:**
 On the dynamic map, all algorithms successfully found an initial path. The costs and nodes expanded are consistent with their respective search strategies. Local Search, while finding an optimal path in this simple scenario, took significantly longer due to its iterative nature and random restarts. The 'Nodes Expanded' metric for local search represents the total nodes expanded by the internal A* calls during path generation and neighbor exploration.

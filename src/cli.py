@@ -34,6 +34,8 @@ def main():
     
     args = parser.parse_args()
 
+    args = parser.parse_args()
+
     if args.compare:
         print(f"Comparing algorithms on map: {args.map_file}")
         algorithms_to_compare = ['bfs', 'a_star', 'local_search']
@@ -110,44 +112,64 @@ def main():
             return
 
         print(f"Running with {args.algorithm.upper()} algorithm...")
-        path, nodes_expanded, cost = agent.find_path()
+        
+        current_time_step = 0
+        path, nodes_expanded, cost = agent.find_path(current_time_step=current_time_step)
 
         if not path:
             print("\nNo initial path found.")
-            env.render() # Render visited nodes even if no path
+            env.render(time_step=current_time_step)
             return
 
         print("\nInitial path found!")
         print(f"  - Nodes Expanded: {nodes_expanded}")
         print(f"  - Path Cost ({args.algorithm.upper()}): {cost}")
         print("\nInitial Grid with Path:")
-        env.render(path=path)
+        env.render(path=path, time_step=current_time_step)
 
         if args.dynamic:
             print("\n--- Dynamic Obstacle Simulation ---")
-            obstacle_pos = path[len(path) // 2]
-            obstacle_pos = (int(obstacle_pos[0]), int(obstacle_pos[1]))
-            print(f"\nA dynamic obstacle appears at {obstacle_pos}!")
-            env.add_obstacle(obstacle_pos)
-            print("\nGrid with new obstacle:")
-            env.render(path=path)
-            new_start_pos_index = path.index(obstacle_pos) - 1
-            if new_start_pos_index < 0:
-                print("Obstacle is at the start, no movement possible.")
-                return
-            env.start_pos = path[new_start_pos_index]
-            print(f"\nAgent is at {env.start_pos}, replanning...")
-            new_path, new_nodes_expanded, new_cost = agent.find_path()
-            if not new_path:
-                print("\nCould not find a new path.")
-                env.render()
-                return
-            print("\nNew path found!")
-            print(f"  - Nodes Expanded: {new_nodes_expanded}")
-            print(f"  - Path Cost ({args.algorithm.upper()}): {new_cost}")
-            final_path = path[:new_start_pos_index+1] + new_path
-            print("\nFinal Grid with New Path:")
-            env.render(path=final_path)
+            
+            # Simulate agent moving along the path
+            simulated_path = []
+            for i, pos in enumerate(path):
+                simulated_path.append(pos)
+                current_time_step += 1
+                
+                # Introduce dynamic obstacle at a specific point on the path
+                if i == len(path) // 2:
+                    obstacle_pos = path[i+1] # Obstacle appears one step ahead
+                    obstacle_pos = (int(obstacle_pos[0]), int(obstacle_pos[1]))
+                    print(f"\nA dynamic obstacle appears at {obstacle_pos} at time step {current_time_step}!")
+                    # env.add_obstacle(obstacle_pos) # No longer needed as is_obstacle handles dynamic
+                    
+                    print("\nGrid with new obstacle:")
+                    env.render(path=simulated_path, time_step=current_time_step) # Show current progress and new obstacle
+
+                    print(f"\nAgent is at {pos}, replanning from time step {current_time_step}...")
+                    
+                    # Replan from the current position and time step
+                    env.start_pos = pos # Agent's current position
+                    new_path, new_nodes_expanded, new_cost = agent.find_path(current_time_step=current_time_step)
+
+                    if not new_path:
+                        print("\nCould not find a new path.")
+                        env.render(time_step=current_time_step)
+                        return
+
+                    print("\nNew path found!")
+                    print(f"  - Nodes Expanded: {new_nodes_expanded}")
+                    print(f"  - Path Cost ({args.algorithm.upper()}): {new_cost}")
+                    
+                    # Combine the paths for rendering
+                    final_path = simulated_path + new_path[1:] # Exclude current pos from new_path
+
+                    print("\nFinal Grid with New Path:")
+                    env.render(path=final_path, time_step=current_time_step)
+                    return # End simulation after replanning demo
+
+            print("\nAgent reached goal without dynamic obstacles.")
+            env.render(path=path, time_step=current_time_step)
 
 
 if __name__ == "__main__":

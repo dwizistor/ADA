@@ -35,7 +35,7 @@ class Agent:
         else:
             raise ValueError(f"Unknown algorithm: {algorithm_name}")
 
-    def find_path(self):
+    def find_path(self, current_time_step=0):
         """
         Finds a path from start to goal using the selected algorithm.
 
@@ -46,4 +46,4 @@ class Agent:
         if not self.algorithm:
             raise Exception("Algorithm not set. Call set_algorithm() first.")
         
-        return self.algorithm(self.environment, self.environment.start_pos, self.environment.goal_pos)
+        return self.algorithm(self.environment, self.environment.start_pos, self.environment.goal_pos, current_time_step)

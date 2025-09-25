@@ -14,8 +14,8 @@ class Environment:
         self.grid = None
         self.start_pos = None
         self.goal_pos = None
-        self.terrain_costs = {'.': 1, '*': 3, 'S': 1, 'G': 1}
-        self.dynamic_obstacles = []
+        self.terrain_costs = {'.': 1, ':': 2, '*': 3, 'S': 1, 'G': 1, '#': float('inf'), 'D': float('inf')}
+        self.dynamic_obstacles_initial_positions = []
         self.load_map(map_path)
 
     def load_map(self, map_path):
@@ -37,6 +37,12 @@ class Environment:
         if goal_pos_arr[0].size > 0:
             self.goal_pos = (goal_pos_arr[0][0], goal_pos_arr[1][0])
 
+        # Find dynamic obstacles
+        dynamic_obstacle_arr = np.where(self.grid == 'D')
+        for i in range(dynamic_obstacle_arr[0].size):
+            pos = (dynamic_obstacle_arr[0][i], dynamic_obstacle_arr[1][i])
+            self.dynamic_obstacles_initial_positions.append({'position': pos, 'direction': (0, 1)}) # Initial direction: right
+
     def get_cost(self, position):
         """
         Gets the movement cost for a given cell.
@@ -54,11 +60,34 @@ class Environment:
         y, x = position
         return 0 <= y < self.grid.shape[0] and 0 <= x < self.grid.shape[1]
 
-    def is_obstacle(self, position):
+    def is_obstacle(self, position, time_step=0):
         """
-        Checks if a position is an obstacle.
+        Checks if a position is an obstacle at a given time step.
         """
-        return self.grid[position[0]][position[1]] == '#'
+        y, x = position
+        if self.grid[y][x] == '#': # Static obstacle
+            return True
+        
+        # Check for dynamic obstacles
+        for obs_data in self.dynamic_obstacles_initial_positions:
+            initial_pos = obs_data['position']
+            direction = obs_data['direction']
+            
+            # Simple oscillating movement (for now)
+            # Move right for 5 steps, then left for 5 steps, etc.
+            move_cycle_length = 10
+            current_cycle_step = time_step % move_cycle_length
+            
+            current_obs_pos = initial_pos
+            if current_cycle_step < move_cycle_length / 2: # Moving right
+                current_obs_pos = (initial_pos[0], initial_pos[1] + current_cycle_step)
+            else: # Moving left
+                current_obs_pos = (initial_pos[0], initial_pos[1] + (move_cycle_length - current_cycle_step))
+            
+            if position == current_obs_pos:
+                return True
+        
+        return False
 
     def add_obstacle(self, position):
         """
@@ -66,20 +95,38 @@ class Environment:
         """
         self.grid[position[0]][position[1]] = '#'
 
-    def render(self, path=None, visited=None):
+    def render(self, path=None, visited=None, time_step=0):
         """
-        Renders the environment to the console with a border and custom characters.
+        Renders the environment to the console with custom characters.
         
         Args:
             path (list, optional): The path to draw on the grid. Defaults to None.
             visited (set, optional): The visited nodes to draw. Defaults to None.
+            time_step (int): The current time step for rendering dynamic obstacles.
         """
         render_grid = np.copy(self.grid)
 
         # Replace characters for rendering
-        render_grid[render_grid == '@'] = 'S'
-        render_grid[render_grid == 'X'] = 'G'
         render_grid[render_grid == '*'] = '.' # Treat difficult terrain as a pathway for rendering
+
+        # Render dynamic obstacles at current time_step
+        for obs_data in self.dynamic_obstacles_initial_positions:
+            initial_pos = obs_data['position']
+            direction = obs_data['direction']
+            
+            # Simple oscillating movement (for now)
+            move_cycle_length = 10
+            current_cycle_step = time_step % move_cycle_length
+            
+            current_obs_pos = initial_pos
+            if current_cycle_step < move_cycle_length / 2: # Moving right
+                current_obs_pos = (initial_pos[0], initial_pos[1] + current_cycle_step)
+            else: # Moving left
+                current_obs_pos = (initial_pos[0], initial_pos[1] + (move_cycle_length - current_cycle_step))
+            
+            if self.is_valid_position(current_obs_pos):
+                render_grid[current_obs_pos] = 'D'
+
 
         if visited:
             for pos in visited:
@@ -88,14 +135,8 @@ class Environment:
 
         if path:
             for pos in path:
-                if render_grid[pos] not in ['S', 'G', '#']:
+                if render_grid[pos] not in ['S', 'G', '#', 'D']:
                     render_grid[pos] = '*'
         
-        # Print top border
-        print('-' * (self.grid.shape[1] + 2))
-
         for row in render_grid:
-            print('|' + ''.join(row) + '|')
-
-        # Print bottom border
-        print('-' * (self.grid.shape[1] + 2))
+            print(''.join(row))

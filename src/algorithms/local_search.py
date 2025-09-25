@@ -37,7 +37,7 @@ def get_neighbor(environment, path, original_start, original_goal):
     else:
         return path, nodes_expanded_a_star # Return original path and its expanded nodes if no sub-path is found
 
-def hill_climbing_replan(environment, start_pos, goal_pos):
+def hill_climbing_replan(environment, start_pos, goal_pos, current_time_step=0):
     """
     Replanning using hill-climbing with random restarts.
     """
