@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+venv/
+
+# OS-specific
+.DS_Store
+
+# Environment variables
+.env
+
+# Generated files
+report/
+maps/
+requirements.md
