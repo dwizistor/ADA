@@ -7,12 +7,14 @@ def heuristic(a, b):
     """
     return max(abs(a[0] - b[0]), abs(a[1] - b[1]))
 
-def a_star(environment):
+def a_star(environment, start_pos, goal_pos):
     """
     Performs A* search to find the cheapest path.
 
     Args:
         environment (Environment): The environment to search in.
+        start_pos (tuple): The starting position (y, x).
+        goal_pos (tuple): The goal position (y, x).
 
     Returns:
         tuple: A tuple containing:
@@ -20,8 +22,6 @@ def a_star(environment):
             - int: The number of nodes expanded.
             - float: The cost of the path.
     """
-    start_pos = environment.start_pos
-    goal_pos = environment.goal_pos
 
     frontier = [(0, start_pos)]  # (f_cost, position)
     parent = {start_pos: None}

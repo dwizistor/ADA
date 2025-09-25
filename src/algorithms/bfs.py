@@ -1,11 +1,13 @@
 from collections import deque
 
-def bfs(environment):
+def bfs(environment, start_pos, goal_pos):
     """
     Performs Breadth-First Search to find the shortest path in terms of number of steps.
 
     Args:
         environment (Environment): The environment to search in.
+        start_pos (tuple): The starting position (y, x).
+        goal_pos (tuple): The goal position (y, x).
 
     Returns:
         tuple: A tuple containing:
@@ -13,8 +15,6 @@ def bfs(environment):
             - int: The number of nodes expanded.
             - float: The cost of the path (for BFS, this is the length of the path).
     """
-    start_pos = environment.start_pos
-    goal_pos = environment.goal_pos
 
     frontier = deque([start_pos])
     visited = {start_pos}

@@ -46,4 +46,4 @@ class Agent:
         if not self.algorithm:
             raise Exception("Algorithm not set. Call set_algorithm() first.")
         
-        return self.algorithm(self.environment)
+        return self.algorithm(self.environment, self.environment.start_pos, self.environment.goal_pos)

@@ -1,11 +1,13 @@
 import heapq
 
-def ucs(environment):
+def ucs(environment, start_pos, goal_pos):
     """
     Performs Uniform-Cost Search to find the cheapest path.
 
     Args:
         environment (Environment): The environment to search in.
+        start_pos (tuple): The starting position (y, x).
+        goal_pos (tuple): The goal position (y, x).
 
     Returns:
         tuple: A tuple containing:
@@ -13,8 +15,6 @@ def ucs(environment):
             - int: The number of nodes expanded.
             - float: The cost of the path.
     """
-    start_pos = environment.start_pos
-    goal_pos = environment.goal_pos
 
     frontier = [(0, start_pos)]  # (cost, position)
     parent = {start_pos: None}
